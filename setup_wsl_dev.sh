@@ -129,8 +129,8 @@ install_claude_code() {
         npm cache clean --force
     fi
     
-    # Install Claude Code
-    npm install -g @anthropic-ai/claude-code
+    # Install Claude Code with verbose output
+    npm install -g @anthropic-ai/claude-code --verbose --progress
     
     log_success "Claude Codeインストール完了"
 }

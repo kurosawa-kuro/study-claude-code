@@ -11,19 +11,28 @@ sudo apt install build-essential curl git -y
 
 # Windows B WSL環境で実行
 # Node.js環境確認
+
+```
 node --version
 npm --version
-
+```
 
 # NVMをインストール
+
+```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
+```
 # ターミナルを再起動またはソースを再読み込み
-source ~/.bashrc
 
+```
+source ~/.bashrc
+```
 # 最新のNode.jsをインストール
+
+```
 nvm install node
 nvm use node
+```
 
 # npmのグローバルディレクトリを設定（権限エラー回避）
 
@@ -35,13 +44,21 @@ source ~/.bashrc
 ```
 
 # bash# Claude Codeをインストール（sudoは使用しない）
+
+```
 npm install -g @anthropic-ai/claude-code
 
 npm install -g @anthropic-ai/claude-code --verbose --progress
+```
 
 # Claude Code の動作確認
-claude --version
 
+```
+claude --version
+```
 
 # Claude Codeを起動
+
+```
 claude
+```
