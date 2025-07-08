@@ -37,6 +37,9 @@ npm install -g @anthropic-ai/claude-code
 
 npm install -g @anthropic-ai/claude-code --verbose --progress
 
+# Claude Code の動作確認
+claude --version
+
 
 # Claude Codeを起動
 claude
