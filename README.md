@@ -35,5 +35,8 @@ source ~/.bashrc
 # bash# Claude Codeをインストール（sudoは使用しない）
 npm install -g @anthropic-ai/claude-code
 
+npm install -g @anthropic-ai/claude-code --verbose --progress
+
+
 # Claude Codeを起動
 claude
