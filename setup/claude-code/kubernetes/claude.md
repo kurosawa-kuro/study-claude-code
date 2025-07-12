@@ -1,18 +1,279 @@
 # Kubernetes 開発・運用ガイド
 
-## 認定試験準拠レベル
+Kubernetes認定試験（KCNA〜CKS）に対応した包括的な学習・実践ガイド
 
-- **KCNA** (Kubernetes and Cloud Native Associate) - 基礎概念
-- **KCSA** (Kubernetes and Cloud Native Security Associate) - セキュリティ基礎
-- **CKAD** (Certified Kubernetes Application Developer) - アプリケーション開発
-- **CKA** (Certified Kubernetes Administrator) - クラスター管理
-- **CKS** (Certified Kubernetes Security Specialist) - 上級セキュリティ
+## 📋 目次
+
+### 🎯 [認定試験マップ](#認定試験マップ)
+- [学習パス](#学習パス)
+- [各認定レベルの概要](#各認定レベルの概要)
+
+### 🚀 [環境セットアップ](#環境セットアップ)
+- [WSL環境でのローカル開発](#wsl環境でのローカル開発)
+  - [Minikube](#minikube) `KCNA`
+  - [Kind (Kubernetes in Docker)](#kind-kubernetes-in-docker) `KCNA`
+- [AWS EKS](#aws-eks) `CKA`
+
+### ⚡ [クイックリファレンス](#クイックリファレンス)
+- [頻出コマンド集](#頻出コマンド集)
+- [YAML テンプレート](#yamlテンプレート)
+- [試験対策チートシート](#試験対策チートシート)
+
+### 🔧 [基本操作](#基本操作-kcnackadcka)
+- [Pod操作](#pod操作) `KCNA` `CKAD`
+- [Deployment](#deployment) `KCNA` `CKAD`
+- [Service](#service) `KCNA` `CKAD`
+
+### 🗃️ [設定管理](#設定管理)
+- [ConfigMapとSecret](#configmapとsecret-ckacks) `CKA` `CKS`
+
+### 🔐 [セキュリティ](#セキュリティ)
+- [RBAC](#rbac-ckacks) `CKA` `CKS`
+- [NetworkPolicy](#networkpolicy-cks) `CKS`
+- [Pod Security Standards](#pod-security-standards) `CKS`
+- [OPA Gatekeeper](#opa-gatekeeper) `CKS`
+- [Falco](#falco) `CKS`
+
+### 🚀 [CI/CD とデプロイメント](#cicd-とデプロイメント)
+- [ArgoCD](#argocd) `CKAD` `CKA`
+- [Kustomize](#kustomize) `CKAD`
+- [Helm](#helm) `CKAD` `CKA`
+
+### 🏗️ [高度な運用](#高度な運用)
+- [Operator](#operator) `CKA`
+- [Istio](#istio) `CKA`
+
+### 📊 [監視・ログ](#監視ログ)
+- [Prometheus + Grafana](#監視スタック-grafana--prometheus--loki--tempo) `CKA`
+- [Loki](#loki) `CKA`
+- [Tempo](#tempo) `CKA`
+- [Thanos](#thanos) `CKA`
+
+### 💾 [データ管理](#データ管理)
+- [MinIO](#minio) `CKA`
+- [Zalando Postgres Operator](#zalando-postgres-operator) `CKA`
+
+### 📡 [メッセージング](#メッセージング)
+- [NATS](#nats) `CKA`
+
+### 🔧 [トラブルシューティング](#トラブルシューティング)
+- [デバッグツール](#デバッグツール) `CKA` `CKS`
+- [ログ収集](#ログ収集) `CKA`
+- [パフォーマンスチューニング](#パフォーマンスチューニング) `CKA`
+
+### 📚 [認定試験対策](#認定試験対策)
+- [CKAD重要コマンド](#ckad重要コマンド)
+- [CKA重要操作](#cka重要操作)
+- [CKS重要設定](#cks重要設定)
+
+---
+
+## 認定試験マップ
+
+### 学習パス
+
+```mermaid
+graph TD
+    A[KCNA: 基礎概念] --> B[CKAD: アプリ開発]
+    A --> C[CKA: クラスター管理]
+    A --> D[KCSA: セキュリティ基礎]
+    B --> E[CKS: 上級セキュリティ]
+    C --> E
+    D --> E
+```
+
+### 各認定レベルの概要
+
+| 認定 | レベル | 対象者 | 主要スキル |
+|------|--------|--------|------------|
+| **KCNA** | 基礎 | 初心者 | Kubernetes基本概念、コンテナ、クラウドネイティブ |
+| **KCSA** | 基礎 | セキュリティ初心者 | セキュリティ基礎、脅威モデル、防御戦略 |
+| **CKAD** | 中級 | アプリ開発者 | アプリデプロイ、設定管理、トラブルシューティング |
+| **CKA** | 中級〜上級 | システム管理者 | クラスター管理、ネットワーク、ストレージ、監視 |
+| **CKS** | 上級 | セキュリティ専門家 | セキュリティ設定、脆弱性対策、コンプライアンス |
+
+---
+
+## クイックリファレンス
+
+### 頻出コマンド集
+
+#### 基本操作 `KCNA` `CKAD`
+```bash
+# 基本情報取得
+kubectl cluster-info
+kubectl get nodes
+kubectl get pods --all-namespaces
+kubectl get services
+
+# リソース詳細確認
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+kubectl exec -it <pod-name> -- /bin/bash
+
+# リソース作成・更新
+kubectl apply -f <file.yaml>
+kubectl create -f <file.yaml>
+kubectl delete -f <file.yaml>
+```
+
+#### 運用操作 `CKA`
+```bash
+# ノード管理
+kubectl drain <node-name> --ignore-daemonsets
+kubectl uncordon <node-name>
+kubectl top nodes
+
+# スケーリング
+kubectl scale deployment <name> --replicas=5
+kubectl autoscale deployment <name> --min=2 --max=10 --cpu-percent=80
+
+# ロールアウト
+kubectl rollout status deployment/<name>
+kubectl rollout history deployment/<name>
+kubectl rollout undo deployment/<name>
+```
+
+#### セキュリティ `CKS`
+```bash
+# RBAC確認
+kubectl auth can-i <verb> <resource> --as=<user>
+kubectl get rolebindings,clusterrolebindings --all-namespaces
+
+# セキュリティスキャン
+kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.securityContext}{"\n"}{end}'
+```
+
+### YAMLテンプレート
+
+#### 基本Pod `KCNA` `CKAD`
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-pod
+  labels:
+    app: example
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+```
+
+#### セキュアなPod `CKS`
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: app
+    image: nginx:1.21
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+    volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+  volumes:
+  - name: tmp
+    emptyDir: {}
+```
+
+### 試験対策チートシート
+
+#### 時間短縮テクニック `CKAD` `CKA` `CKS`
+```bash
+# エイリアス設定（試験開始時に実行）
+alias k=kubectl
+alias kgp='kubectl get pods'
+alias kgs='kubectl get svc'
+alias kgd='kubectl get deployment'
+alias kdp='kubectl describe pod'
+alias kaf='kubectl apply -f'
+alias kdel='kubectl delete'
+
+# 補完機能有効化
+source <(kubectl completion bash)
+complete -F __start_kubectl k
+
+# 必須設定
+export do="--dry-run=client -o yaml"
+export now="--force --grace-period 0"
+```
+
+#### クイック作成コマンド `CKAD`
+```bash
+# Pod作成
+k run nginx --image=nginx $do > pod.yaml
+
+# Deployment作成
+k create deploy webapp --image=nginx --replicas=3 $do > deploy.yaml
+
+# Service作成
+k expose deploy webapp --port=80 --target-port=8080 --type=ClusterIP $do > svc.yaml
+
+# Job作成
+k create job pi --image=perl -- perl -Mbignum=bpi -wle 'print bpi(2000)' $do > job.yaml
+
+# CronJob作成
+k create cj backup --image=busybox --schedule="0 2 * * *" -- /bin/sh -c 'echo backup' $do > cj.yaml
+
+# ConfigMap作成
+k create cm app-config --from-literal=key1=value1 --from-literal=key2=value2 $do > cm.yaml
+
+# Secret作成
+k create secret generic app-secret --from-literal=user=admin --from-literal=pass=secret $do > secret.yaml
+```
+
+#### 実用的なトラブルシューティング `CKA` `CKS`
+```bash
+# Podが起動しない場合の診断
+k describe pod <pod-name>
+k logs <pod-name> --previous
+k get events --sort-by=.metadata.creationTimestamp
+
+# ネットワーク疎通確認
+k run test-pod --image=busybox:1.28 --rm -it -- nslookup kubernetes.default
+k run test-pod --image=nicolaka/netshoot --rm -it -- /bin/bash
+
+# リソース使用量確認
+k top nodes
+k top pods --all-namespaces
+k describe node <node-name>
+
+# ノード問題の診断
+k get nodes -o wide
+systemctl status kubelet
+journalctl -u kubelet
+```
+
+---
 
 ## 環境セットアップ
 
 ### WSL環境でのローカル開発
 
-#### Minikube
+#### Minikube `KCNA`
+
+> **💡 ポイント**: ローカル開発環境として最も手軽なKubernetesクラスター
 
 ```bash
 # Minikubeインストール
@@ -31,7 +292,9 @@ minikube addons enable dashboard
 minikube start --nodes=3 --cpus=2 --memory=4096
 ```
 
-#### Kind (Kubernetes in Docker)
+#### Kind (Kubernetes in Docker) `KCNA`
+
+> **💡 ポイント**: Dockerコンテナ内でKubernetesクラスターを実行、CI/CDに最適
 
 ```bash
 # Kindインストール
@@ -66,7 +329,9 @@ EOF
 kind create cluster --config kind-config.yaml --name dev-cluster
 ```
 
-### AWS EKS
+### AWS EKS `CKA`
+
+> **💡 ポイント**: 本番環境向けマネージドKubernetesサービス
 
 ```bash
 # eksctlインストール
@@ -90,7 +355,13 @@ aws eks update-kubeconfig --region ap-northeast-1 --name prod-cluster
 
 ## 基本操作（KCNA/CKAD/CKA）
 
-### Pod操作
+### Pod操作 `KCNA` `CKAD`
+
+> **📚 学習ポイント**
+> - Podはデプロイ可能な最小単位
+> - 1つのPodには通常1つのコンテナ
+> - livenessProbeとreadinessProbeの違いを理解
+> - リソース制限の重要性
 
 ```yaml
 # pod-example.yaml
@@ -137,7 +408,13 @@ kubectl exec -it nginx-pod -- /bin/bash
 kubectl port-forward nginx-pod 8080:80
 ```
 
-### Deployment
+### Deployment `KCNA` `CKAD`
+
+> **📚 学習ポイント**
+> - 宣言的なアプリケーション管理
+> - ローリングアップデートとロールバック
+> - レプリカ数の動的スケーリング
+> - Pod選択時のlabelSelectorの活用
 
 ```yaml
 # deployment.yaml
@@ -177,7 +454,13 @@ kubectl rollout history deployment/webapp
 kubectl rollout undo deployment/webapp
 ```
 
-### Service
+### Service `KCNA` `CKAD`
+
+> **📚 学習ポイント**
+> - Pod間通信の抽象化レイヤー
+> - ServiceタイプとEndpointsの関係
+> - DNSベースのサービス検索
+> - Ingressによる外部公開
 
 ```yaml
 # service.yaml
@@ -214,7 +497,17 @@ spec:
               number: 80
 ```
 
-## ConfigMapとSecret（CKA/CKS）
+---
+
+## 設定管理
+
+### ConfigMapとSecret `CKA` `CKS`
+
+> **💡 ベストプラクティス**
+> - Secretには機密情報のみを格納
+> - ConfigMapは設定ファイルや環境変数に使用
+> - Base64エンコードされたSecretも平文同様に扱う
+> - 本番環境では外部シークレット管理ツール（Vault等）を検討
 
 ```bash
 # ConfigMap作成
@@ -261,7 +554,17 @@ spec:
       name: app-config
 ```
 
-## RBAC（CKA/CKS）
+---
+
+## セキュリティ
+
+### RBAC（Role-Based Access Control) `CKA` `CKS`
+
+> **💡 ベストプラクティス**
+> - 最小権限の原則を適用
+> - サービスアカウント毎に適切な権限を設定
+> - 定期的な権限監査を実施
+> - ClusterRoleよりRoleを優先使用
 
 ```yaml
 # rbac.yaml
@@ -296,7 +599,13 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## NetworkPolicy（CKS）
+### NetworkPolicy `CKS`
+
+> **💡 ベストプラクティス**
+> - デフォルト拒否ポリシーから開始
+> - マイクロセグメンテーションを実装
+> - 最小限の通信パスのみ許可
+> - ラベルセレクタを効果的に活用
 
 ```yaml
 # network-policy.yaml
@@ -332,7 +641,17 @@ spec:
       port: 5432
 ```
 
-## ArgoCD
+---
+
+## CI/CD とデプロイメント
+
+### ArgoCD `CKAD` `CKA`
+
+> **💡 ベストプラクティス**
+> - GitOpsワークフローの実装
+> - アプリケーション設定のGit管理
+> - 自動同期と手動承認の使い分け
+> - 複数環境での段階的デプロイ
 
 ```bash
 # ArgoCDインストール
@@ -374,7 +693,13 @@ spec:
     - CreateNamespace=true
 ```
 
-## Kustomize
+### Kustomize `CKAD`
+
+> **💡 ベストプラクティス**
+> - 環境別のオーバーレイ構成
+> - 共通設定のbase使用
+> - ConfigMapGeneratorで設定管理
+> - イメージタグの環境別切り替え
 
 ```yaml
 # base/kustomization.yaml
@@ -423,7 +748,13 @@ kubectl apply -k overlays/production/
 kubectl diff -k overlays/production/
 ```
 
-## Helm
+### Helm `CKAD` `CKA`
+
+> **💡 ベストプラクティス**
+> - Values.yamlでの設定外部化
+> - Helmテンプレートの適切な構造化
+> - 依存関係の明確な管理
+> - セキュリティスキャン（helm-secrets等）の導入
 
 ```bash
 # Helmインストール
@@ -476,7 +807,17 @@ resources:
     memory: 128Mi
 ```
 
-## Operator
+---
+
+## 高度な運用
+
+### Operator `CKA`
+
+> **💡 ベストプラクティス**
+> - カスタムリソースの適切な設計
+> - Controllerの冪等性確保
+> - エラーハンドリングとリトライ戦略
+> - 監視とアラートの実装
 
 ```bash
 # Operator SDKインストール
@@ -510,7 +851,17 @@ func (r *WebAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 }
 ```
 
-## 監視スタック（Grafana + Prometheus + Loki + Tempo）
+---
+
+## 監視・ログ
+
+### 監視スタック（Grafana + Prometheus + Loki + Tempo) `CKA`
+
+> **💡 ベストプラクティス**
+> - メトリクス、ログ、トレースの統合監視
+> - 適切なアラートルールの設定
+> - ダッシュボードの標準化
+> - データ保持期間の最適化
 
 ### Prometheus Operator
 
@@ -538,7 +889,7 @@ spec:
     path: /metrics
 ```
 
-### Grafana
+### Grafana `CKA`
 
 ```yaml
 # grafana-datasources.yaml
@@ -565,7 +916,7 @@ data:
       access: proxy
 ```
 
-### Loki
+### Loki `CKA`
 
 ```bash
 # Lokiインストール
@@ -598,7 +949,7 @@ data:
         target_label: namespace
 ```
 
-### Tempo
+### Tempo `CKA`
 
 ```yaml
 # tempo-config.yaml
@@ -629,7 +980,17 @@ data:
           insecure: true
 ```
 
-## MinIO
+---
+
+## データ管理
+
+### MinIO `CKA`
+
+> **💡 ベストプラクティス**
+> - S3互換のオブジェクトストレージとして活用
+> - 分散ストレージによる高可用性確保
+> - TLS通信と認証の設定
+> - バックアップ戦略の実装
 
 ```bash
 # MinIOインストール
@@ -662,7 +1023,13 @@ spec:
             storage: 10Gi
 ```
 
-## Zalando Postgres Operator
+### Zalando Postgres Operator `CKA`
+
+> **💡 ベストプラクティス**
+> - 高可用性PostgreSQLクラスターの自動化
+> - バックアップとリストアの自動化
+> - パフォーマンス監視の実装
+> - セキュリティ設定の強化
 
 ```bash
 # Zalando Postgres Operatorインストール
@@ -699,7 +1066,13 @@ spec:
       memory: 500Mi
 ```
 
-## Thanos
+### Thanos `CKA`
+
+> **💡 ベストプラクティス**
+> - 長期メトリクス保存戦略
+> - 複数Prometheusインスタンスの統合
+> - オブジェクトストレージの活用
+> - グローバルビューの提供
 
 ```yaml
 # thanos-sidecar.yaml
@@ -749,7 +1122,17 @@ spec:
           mountPath: /etc/thanos
 ```
 
-## NATS
+---
+
+## メッセージング
+
+### NATS `CKA`
+
+> **💡 ベストプラクティス**
+> - JetStreamによる永続化メッセージング
+> - 高性能・低レイテンシな通信
+> - マイクロサービス間の疎結合化
+> - セキュアな認証・認可の実装
 
 ```bash
 # NATSインストール
@@ -787,7 +1170,13 @@ data:
     }
 ```
 
-## Istio
+### Istio `CKA`
+
+> **💡 ベストプラクティス**
+> - サービスメッシュによる通信制御
+> - mTLSによるセキュアな通信
+> - トラフィック管理とカナリアデプロイ
+> - 分散トレーシングの活用
 
 ```bash
 # Istioインストール
@@ -866,9 +1255,13 @@ spec:
       version: v2
 ```
 
-## セキュリティベストプラクティス（CKS）
+### Pod Security Standards `CKS`
 
-### Pod Security Standards
+> **💡 ベストプラクティス**
+> - Restrictedプロファイルの使用を推奨
+> - 特権コンテナの使用禁止
+> - 読み取り専用ルートファイルシステム
+> - 非rootユーザーでの実行
 
 ```yaml
 # pod-security-policy.yaml
@@ -900,7 +1293,13 @@ spec:
   readOnlyRootFilesystem: false
 ```
 
-### OPA Gatekeeper
+### OPA Gatekeeper `CKS`
+
+> **💡 ベストプラクティス**
+> - ポリシーのコード化によるガバナンス
+> - 段階的なポリシー導入（warn→enforce）
+> - 包括的なConstraintTemplateの作成
+> - 継続的なポリシー監査
 
 ```bash
 # Gatekeeperインストール
@@ -940,7 +1339,13 @@ spec:
         }
 ```
 
-### Falco
+### Falco `CKS`
+
+> **💡 ベストプラクティス**
+> - リアルタイムセキュリティ監視
+> - カスタムルールによる脅威検出
+> - アラート通知の自動化
+> - ログ分析との連携
 
 ```bash
 # Falcoインストール
@@ -964,9 +1369,17 @@ helm install falco falcosecurity/falco \
   tags: [container, process]
 ```
 
+---
+
 ## トラブルシューティング
 
-### デバッグツール
+### デバッグツール `CKA` `CKS`
+
+> **💡 ベストプラクティス**
+> - 段階的なアプローチで問題を特定
+> - ログとイベントの systematic な確認
+> - ネットワークとDNSの動作確認
+> - リソース使用量の継続的監視
 
 ```bash
 # デバッグPod作成
@@ -983,7 +1396,13 @@ kubectl top nodes
 kubectl top pods --all-namespaces
 ```
 
-### ログ収集
+### ログ収集 `CKA`
+
+> **📚 学習ポイント**
+> - アプリケーション・システム・監査ログの区別
+> - 構造化ログの活用
+> - 集約型ログ管理の導入
+> - ログローテーションの重要性
 
 ```bash
 # ログ確認
@@ -995,7 +1414,13 @@ kubectl get events --sort-by=.metadata.creationTimestamp
 kubectl describe pod webapp-xxx
 ```
 
-### パフォーマンスチューニング
+### パフォーマンスチューニング `CKA`
+
+> **📚 学習ポイント**
+> - リソース要求と制限の適切な設定
+> - HPA/VPAによる自動スケーリング
+> - ノードアフィニティとTaintの活用
+> - PodDisruptionBudgetによる可用性確保
 
 ```yaml
 # hpa.yaml
@@ -1038,9 +1463,16 @@ spec:
         periodSeconds: 30
 ```
 
+---
+
 ## 認定試験対策
 
 ### CKAD重要コマンド
+
+> **⏰ 試験時間**: 2時間
+> **📝 問題数**: 15-20問
+> **💻 実技**: ハンズオン形式
+> **📚 重点分野**: アプリケーション設計・構築・設定・デプロイ
 
 ```bash
 # Pod作成（ドライラン）
@@ -1064,6 +1496,11 @@ kubectl create cronjob backup --image=busybox --schedule="0 1 * * *" -- /bin/sh 
 
 ### CKA重要操作
 
+> **⏰ 試験時間**: 3時間
+> **📝 問題数**: 15-20問
+> **💻 実技**: クラスター管理・ネットワーク・ストレージ
+> **📚 重点分野**: クラスター管理・ワークロード・サービス・ネットワーク
+
 ```bash
 # etcdバックアップ
 ETCDCTL_API=3 etcdctl snapshot save snapshot.db \
@@ -1086,6 +1523,11 @@ kubeadm certs renew all
 ```
 
 ### CKS重要設定
+
+> **⏰ 試験時間**: 2時間
+> **📝 問題数**: 15-20問
+> **💻 実技**: セキュリティ設定・脆弱性対策・コンプライアンス
+> **📚 重点分野**: クラスター設定・システム強化・監視・ログ・ランタイムセキュリティ
 
 ```bash
 # Admission Controller有効化
