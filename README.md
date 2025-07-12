@@ -1,6 +1,3 @@
-
-
-# 
 # パッケージ更新
 sudo apt update && sudo apt upgrade -y
 
