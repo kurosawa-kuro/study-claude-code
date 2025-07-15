@@ -173,6 +173,10 @@ npm install -g @anthropic-ai/claude-code
 npm install -g @anthropic-ai/claude-code --verbose --progress
 ```
 
+```
+npm install -g claude-code
+```
+
 ### 9. 動作確認
 
 ```bash
