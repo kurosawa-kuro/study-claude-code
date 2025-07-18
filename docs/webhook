@@ -1,0 +1,107 @@
+Claude Codeに関するWebhook通信について説明します。
+
+## Claude CodeのWebhook通信について
+
+現在の情報では、**Claude Codeから直接Webhookを送信する機能は公式にはサポートされていません**。
+
+### 📋 現状の制約
+
+Claude Codeは研究プレビュー版のターミナルツールとして提供されており：
+- コーディングタスクの実行に特化
+- ローカル環境での作業が前提
+- 外部API通信機能は限定的
+
+### 🔧 代替案
+
+処理終了を通知したい場合の回避策：
+
+#### 1. **スクリプト経由での実装**
+```bash
+# Claude Codeでタスクを実行後、別スクリプトを呼び出す
+claude-code "タスクを実行" && ./send-webhook.sh
+```
+
+#### 2. **Webhookスクリプト例**
+```bash
+#!/bin/bash
+# send-webhook.sh
+
+WEBHOOK_URL="https://your-webhook-url.com/endpoint"
+STATUS=$1
+MESSAGE=$2
+
+curl -X POST $WEBHOOK_URL \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"status\": \"$STATUS\",
+    \"message\": \"$MESSAGE\",
+    \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+  }"
+```
+
+#### 3. **Node.jsでの実装例**
+```javascript
+// webhook-notifier.js
+const https = require('https');
+
+function sendWebhook(status, message) {
+  const data = JSON.stringify({
+    status: status,
+    message: message,
+    timestamp: new Date().toISOString()
+  });
+
+  const options = {
+    hostname: 'your-webhook-url.com',
+    port: 443,
+    path: '/endpoint',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': data.length
+    }
+  };
+
+  const req = https.request(options, (res) => {
+    console.log(`statusCode: ${res.statusCode}`);
+  });
+
+  req.on('error', (error) => {
+    console.error(error);
+  });
+
+  req.write(data);
+  req.end();
+}
+
+// Claude Codeタスク完了後に実行
+sendWebhook('completed', 'Claude Code task finished');
+```
+
+### 💡 推奨される構成
+
+```bash
+# ワークフロー例
+1. Claude Codeでタスク実行
+2. タスク完了を検知するラッパースクリプト
+3. Webhook送信処理
+
+# 実装例
+#!/bin/bash
+echo "Starting Claude Code task..."
+claude-code "実行したいタスク" 
+
+if [ $? -eq 0 ]; then
+    node webhook-notifier.js "success" "Task completed"
+else
+    node webhook-notifier.js "failed" "Task failed"
+fi
+```
+
+### 📝 注意事項
+
+- Claude Code自体のAPI仕様は今後変更される可能性があります
+- 最新情報は[Anthropicの公式ドキュメント](https://docs.anthropic.com)を確認してください
+- より詳細な実装方法については[サポート](https://support.anthropic.com)へお問い合わせください
+
+現時点では、Claude Codeの処理とWebhook通信は別々に実装し、シェルスクリプトやプログラムで連携させる方法が現実的です。
