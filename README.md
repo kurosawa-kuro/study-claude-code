@@ -468,6 +468,9 @@ npm cache clean --force
 ## 3. Claude CLIを再インストール
 
 ```bash
+# 詳細ログ付きインストール（トラブルシューティング用）
+npm install -g @anthropic-ai/claude-code --verbose --progress
+
 # グローバルインストール
 npm install -g @anthropic-ai/claude-code
 
